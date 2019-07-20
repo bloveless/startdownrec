@@ -1,13 +1,22 @@
 package main
 
-import "preemptivectl"
+import (
+	"log"
+	"net/http"
+	"startdownrec"
+
+	"github.com/unrolled/logger"
+)
 
 func main() {
-	function := preemptivectl.Function{
-		Project: "brennon-loveless",
-		Zone: "us-central1-a",
-		GroupManagerSelector: "demon-k8s",
-	}
+	loggerMiddleware := logger.New(logger.Options{
+		Prefix: "StartDownRec",
+		RemoteAddressHeaders: []string{"X-Forwarded-For"},
+		OutputFlags: log.LstdFlags,
+	})
 
-	function.Exec()
+	mux := http.NewServeMux()
+	mux.Handle("/", loggerMiddleware.Handler(http.HandlerFunc(startdownrec.Run)))
+
+	log.Fatal(http.ListenAndServe(":8080", mux))
 }
