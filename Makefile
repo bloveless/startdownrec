@@ -1,12 +1,29 @@
-GOOGLE_APPLICATION_CREDENTIALS := ~/.gcp/local-startdownrec-service-account.json
 FUNCTION_NAME := startdownrec
 FUNCTION_RUNTIME := go111
 FUNCTION_ENTRY_POINT := Run
 FUNCTION_SERVICE_ACCOUNT := startdownrec-function@brennon-loveless.iam.gserviceaccount.com
 HOSTNAME := $(shell hostname)
+BIN_DIR=$(PWD)/bin
 
-run:
-	GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS} go run cmd/main.go
+.PHONY: all
+all: build
+
+dependencies:
+	go mod download
+
+build: dependencies
+	go build -o $(BIN_DIR)/startdownrec cmd/*.go
+
+run: build
+	$(BIN_DIR)/startdownrec
+
+install-reflex:
+	go get github.com/cespare/reflex
+
+debug: dependencies install-reflex
+	reflex -c reflex.conf
+
+# TESTING/DEPLOYMENT TOOLS
 
 post:
 	curl -X POST -H "Content-Type: application/json" -d '{"hostname":"$(HOSTNAME)","status":"startup"}' http://localhost:8080

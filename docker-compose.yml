@@ -1,0 +1,43 @@
+version: '3.7'
+
+services:
+  server:
+    build:
+      context: .
+      dockerfile: deploy/docker/server/Dockerfile
+      target: builder
+    environment:
+      MYSQL_HOST: "db"
+      MYSQL_DATABASE: "startdownrec"
+      MYSQL_USER: "startdownrec"
+      MYSQL_PASSWORD: "2i2XfaLV4u!P1nadznz"
+      GOOGLE_APPLICATION_CREDENTIALS: "/home/appuser/.gcp/local-startdownrec-service-account.json"
+    ports:
+      - 8080:8080
+    volumes:
+      - ~/.gcp/local-startdownrec-service-account.json:/home/appuser/.gcp/local-startdownrec-service-account.json
+      - .:/home/appuser/app
+    networks:
+      - startdownrec
+    depends_on:
+      - db
+  db:
+    image: mysql:5.7
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+      MYSQL_DATABASE: "startdownrec"
+      MYSQL_USER: "startdownrec"
+      MYSQL_PASSWORD: "2i2XfaLV4u!P1nadznz"
+    ports:
+      - 3306:3306
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./deploy/docker/mysql/init:/docker-entrypoint-initdb.d
+    networks:
+      - startdownrec
+
+volumes:
+  mysql_data:
+
+networks:
+  startdownrec:
